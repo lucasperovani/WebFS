@@ -3,7 +3,7 @@ use std::{io, net::SocketAddr, path::{Path, PathBuf}};
 use path_clean::PathClean;
 use tokio::{io::BufWriter, signal, fs::File};
 use tokio_util::io::{ReaderStream, StreamReader};
-use tower_http::services::ServeFile;
+use tower_http::services::{ServeDir, ServeFile};
 use axum::{
 	body::{Body, Bytes}, extract::{Query, Request, State}, http::{header, StatusCode}, response::IntoResponse, routing::{delete, get, put}, BoxError, Json, Router
 };
@@ -23,10 +23,10 @@ async fn main() {
 	// Build application
 	let app = Router::new()
 		.route_service("/", ServeFile::new("assets/html/index.html"))
-		.route_service("/js", ServeFile::new("assets/js"))
-		.route_service("/css", ServeFile::new("assets/css"))
-		.route_service("/bootstrap", ServeFile::new("assets/bootstrap"))
-		.route_service("/fontawesome", ServeFile::new("assets/fontawesome"))
+		.nest_service("/js", ServeDir::new("assets/js"))
+		.nest_service("/css", ServeDir::new("assets/css"))
+		.nest_service("/bootstrap", ServeDir::new("assets/bootstrap"))
+		.nest_service("/fontawesome", ServeDir::new("assets/fontawesome"))
 		.route("/mkdir", put(create_dir))
 		.route("/rmdir", delete(delete_dir))
 		.route("/ls", get(ls_dir))
