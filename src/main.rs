@@ -1,18 +1,13 @@
-use std::{net::SocketAddr, path::Path};
+use std::{io, net::SocketAddr, path::{Path, PathBuf}};
 
 use path_clean::PathClean;
-use tokio::signal;
-use tokio_util::io::ReaderStream;
+use tokio::{io::BufWriter, signal, fs::File};
+use tokio_util::io::{ReaderStream, StreamReader};
 use tower_http::services::ServeFile;
 use axum::{
-	body::Body,
-	extract::{Query, State},
-	http::{header, StatusCode},
-	response::IntoResponse,
-	routing::{delete, get, put},
-	Json,
-	Router
+	body::{Body, Bytes}, extract::{Query, Request, State}, http::{header, StatusCode}, response::IntoResponse, routing::{delete, get, put}, BoxError, Json, Router
 };
+use futures::{Stream, TryStreamExt};
 use serde::{Deserialize, Serialize};
 use colored::Colorize;
 
@@ -27,13 +22,19 @@ async fn main() {
 	
 	// Build application
 	let app = Router::new()
-		.route_service("/", ServeFile::new("assets/index.html"))
+		.route_service("/", ServeFile::new("assets/html/index.html"))
+		.route_service("/js", ServeFile::new("assets/js"))
+		.route_service("/css", ServeFile::new("assets/css"))
+		.route_service("/bootstrap", ServeFile::new("assets/bootstrap"))
+		.route_service("/fontawesome", ServeFile::new("assets/fontawesome"))
 		.route("/mkdir", put(create_dir))
 		.route("/rmdir", delete(delete_dir))
 		.route("/ls", get(ls_dir))
 		.route("/mv", put(move_dir_or_file))
 		.route("/download", get(download_file))
 		.route("/rm", delete(delete_file))
+		.route("/upload", put(upload_file))
+		.route("/cp", put(copy))
 		.with_state(ServerState {data_dir});
 
 	// Create the listener
@@ -100,7 +101,7 @@ struct ServerState {
 }
 
 #[derive(Serialize)]
-struct File {
+struct FileInfo {
 	name: String,
 	size: u64,
 	is_dir: bool,
@@ -110,7 +111,7 @@ struct File {
 struct LsDirectoryResponse {
 	success: bool,
 	message: String,
-	files: Vec<File>
+	files: Vec<FileInfo>
 }
 
 #[derive(Deserialize)]
@@ -132,8 +133,8 @@ struct SimpleServerResponse {
 
 /// List the files in a directory
 async fn ls_dir(
-	query_params: Query<DirectoryQuery>,
 	State(state): State<ServerState>,
+	query_params: Query<DirectoryQuery>,
 ) -> (StatusCode, Json<LsDirectoryResponse>) {
 	let path = Path::new(&state.data_dir)
 		.join(query_params.path.clone())
@@ -214,7 +215,7 @@ async fn ls_dir(
 			),
 		};
 
-		let file = File {
+		let file = FileInfo {
 			name: entry
 				.file_name()
 				.into_string()
@@ -239,8 +240,8 @@ async fn ls_dir(
 
 /// Create directory
 async fn create_dir(
-	query_params: Query<DirectoryQuery>,
 	State(state): State<ServerState>,
+	query_params: Query<DirectoryQuery>,
 ) -> (StatusCode, Json<SimpleServerResponse>) {
 	let path = Path::new(&state.data_dir)
 		.join(query_params.path.clone())
@@ -287,8 +288,8 @@ async fn create_dir(
 
 /// Delete whole directory
 async fn delete_dir(
-	query_params: Query<DirectoryQuery>,
 	State(state): State<ServerState>,
+	query_params: Query<DirectoryQuery>,
 ) -> (StatusCode, Json<SimpleServerResponse>) {
 	let path = Path::new(&state.data_dir)
 		.join(query_params.path.clone())
@@ -335,8 +336,8 @@ async fn delete_dir(
 
 /// Move directory
 async fn move_dir_or_file(
-	query_params: Query<MoveQuery>,
 	State(state): State<ServerState>,
+	query_params: Query<MoveQuery>,
 ) -> (StatusCode, Json<SimpleServerResponse>) {
 	let from = Path::new(&state.data_dir)
 		.join(query_params.from.clone())
@@ -400,10 +401,34 @@ async fn move_dir_or_file(
 	}
 }
 
+/// Copy directory helper function
+/// This function do not test if the source or destination directory exists
+fn copy_dir_all(
+	src: &PathBuf, dst: &PathBuf
+) -> io::Result<()> {
+	// Create the destination directory
+	std::fs::create_dir_all(dst)?;
+
+	let directories = src.read_dir()?;
+
+	for entry in directories {
+		let entry = entry?;
+		let file_type = entry.file_type()?;
+		let new_path = dst.join(entry.file_name());
+		if file_type.is_dir() {
+			copy_dir_all(&entry.path(), &new_path)?;
+		} else {
+			std::fs::copy(entry.path(), new_path)?;
+		}
+	}
+
+	Ok(())
+}
+
 /// Return the file to download
 async fn download_file(
-	query_params: Query<DirectoryQuery>,
 	State(state): State<ServerState>,
+	query_params: Query<DirectoryQuery>,
 ) -> impl IntoResponse {
 	let path = Path::new(&state.data_dir)
 		.join(query_params.path.clone())
@@ -454,8 +479,8 @@ async fn download_file(
 
 /// Remove a file
 async fn delete_file(
-	query_params: Query<DirectoryQuery>,
 	State(state): State<ServerState>,
+	query_params: Query<DirectoryQuery>,
 ) -> (StatusCode, Json<SimpleServerResponse>) {
 	let path = Path::new(&state.data_dir)
 		.join(query_params.path.clone())
@@ -497,5 +522,184 @@ async fn delete_file(
 				message: format!("Failed to delete file: {}", err),
 			})
 		),
+	}
+}
+
+/// Save a `Stream` to a file
+async fn stream_to_file<S, E>(
+	path: PathBuf, stream: S
+) -> (StatusCode, Json<SimpleServerResponse>)
+where
+	S: Stream<Item = Result<Bytes, E>>,
+	E: Into<BoxError>,
+{
+	let response = async {
+		// Convert the stream into an `AsyncRead`.
+        let body_with_io_error = stream
+			.map_err(
+				|error| io::Error::new(io::ErrorKind::Other, error)
+			);
+        let body_reader =
+			StreamReader::new(body_with_io_error);
+        futures::pin_mut!(body_reader);
+
+		// Create the file
+		let mut file = BufWriter::new(
+			File::create(path).await?
+		);
+
+		// Copy the body into the file.
+        tokio::io::copy(&mut body_reader, &mut file).await?;
+
+		Ok::<(StatusCode, Json<SimpleServerResponse>), io::Error>((
+			StatusCode::OK,
+			Json(SimpleServerResponse {
+				success: true,
+				message: "File uploaded successfully".to_string(),
+			})
+		))
+	}
+	.await;
+
+	match response {
+		Ok(response) => response,
+		Err(error) => (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(SimpleServerResponse {
+				success: false,
+				message: format!("Failed to upload file: {}", error),
+			})
+		),
+	}
+}
+
+/// Upload a file
+async fn upload_file(
+	State(state): State<ServerState>,
+	query_params: Query<DirectoryQuery>,
+	request: Request
+) -> (StatusCode, Json<SimpleServerResponse>) {
+	// Join paths
+	let path = Path::new(&state.data_dir)
+		.join(query_params.path.clone())
+		.clean();
+
+	// Confirm that the path is part of the data directory
+	if !path.starts_with(&state.data_dir) {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(SimpleServerResponse {
+				success: false,
+				message: "Invalid path".to_string(),
+			})
+		);
+	}
+
+	if path.try_exists().unwrap_or(true) {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(SimpleServerResponse {
+				success: false,
+				message: "File already exists".to_string(),
+			})
+		);
+	}
+
+	stream_to_file(path, request.into_body().into_data_stream()).await
+}
+
+// Copy the file or directory to the target directory
+async fn copy(
+	State(state): State<ServerState>,
+	query_params: Query<MoveQuery>,
+) -> (StatusCode, Json<SimpleServerResponse>) {
+	let from = Path::new(&state.data_dir)
+		.join(query_params.from.clone())
+		.clean();
+
+	let to = Path::new(&state.data_dir)
+		.join(query_params.to.clone())
+		.clean();
+
+	// Confirm that the path is part of the data directory
+	if
+		!from.starts_with(&state.data_dir) ||
+		!to.starts_with(&state.data_dir)
+	{
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(SimpleServerResponse {
+				success: false,
+				message: "Invalid paths".to_string(),
+			})
+		);
+	}
+
+	// If the source directory does not exist return error
+	if !from.try_exists().unwrap_or(false)  {
+		return (
+			StatusCode::NOT_FOUND,
+			Json(SimpleServerResponse {
+				success: false,
+				message: "Source file not found".to_string(),
+			})
+		);
+	}
+
+	// If the destination directory does exist return error
+	if to.try_exists().unwrap_or(true) {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(SimpleServerResponse {
+				success: false,
+				message: "Destination path already exists".to_string(),
+			})
+		);
+	}
+
+	if from.is_dir() {
+		// Copy the directory
+		match copy_dir_all(&from, &to) {
+			Ok(_) => return (
+				StatusCode::OK,
+				Json(SimpleServerResponse {
+					success: true,
+					message: "Directory copied successfully".to_string(),
+				})
+			),
+			Err(err) => return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SimpleServerResponse {
+					success: false,
+					message: format!("Failed to copy directory: {}", err),
+				})
+			),
+		}
+	} else if from.is_file() {
+		// Copy the file
+		match tokio::fs::copy(from, to).await {
+			Ok(_) => return (
+				StatusCode::OK,
+				Json(SimpleServerResponse {
+					success: true,
+					message: "File copied successfully".to_string(),
+				})
+			),
+			Err(err) => return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SimpleServerResponse {
+					success: false,
+					message: format!("Failed to copy file: {}", err),
+				})
+			),
+		}
+	} else {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(SimpleServerResponse {
+				success: false,
+				message: "Source is not a file or directory".to_string(),
+			})
+		);
 	}
 }
