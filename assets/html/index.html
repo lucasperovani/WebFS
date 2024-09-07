@@ -1,8 +1,43 @@
 <!DOCTYPE html>
-    <head>
-        <title>My App</title>
-    </head>
-    <body>
-        <h1>Hello, world!</h1>
-    </body>
+<html lang="pt-BR">
+	<head>
+		<title>My App</title>
+
+		<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="bootstrap/css/bootstrap-breadcrumb.css">
+
+		<script src="js/index.js"></script>
+	</head>
+	<body>
+		<!-- Nav Bar -->
+		<nav class="navbar navbar-expand-md fixed-top mx-3" aria-label="breadcrumb">
+			<!-- Path list -->
+			<ol id="breadcrumb" class="breadcrumb breadcrumb-custom overflow-hidden text-center bg-body-tertiary border rounded-3 w-100">
+				<!-- Home -->
+				<li class="breadcrumb-item">
+				  <a class="link-body-emphasis fw-semibold text-decoration-none" href="#">
+					<svg class="bi" width="16" height="16"><use xlink:href="#house-door-fill"></use></svg>
+					Home
+				  </a>
+				</li>
+				<li class="breadcrumb-item">
+				  <a class="link-body-emphasis fw-semibold text-decoration-none" href="#">Library</a>
+				</li>
+				<li class="breadcrumb-item active" aria-current="page">
+				  Data
+				</li>
+			  </ol>
+		</nav>
+
+		<!-- Files Content -->
+		<div>
+			<!-- Loading -->
+			<div id="loading_modal"></div>
+
+			<!-- Files -->
+			<div id="files_list"></div>
+		</div>
+
+		<script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+	</body>
 </html>
