@@ -247,8 +247,12 @@ async fn create_dir(
 		.join(query_params.path.clone())
 		.clean();
 
-	// Confirm that the path is part of the data directory
-	if !path.starts_with(&state.data_dir) {
+	// Confirm that the path is part of the data directory and is not the data
+	// directory itsel
+	if 
+		!path.starts_with(&state.data_dir) ||
+		path.ends_with(&state.data_dir)
+	{
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(SimpleServerResponse {
@@ -295,8 +299,12 @@ async fn delete_dir(
 		.join(query_params.path.clone())
 		.clean();
 
-	// Confirm that the path is part of the data directory
-	if !path.starts_with(&state.data_dir) {
+	// Confirm that the path is part of the data directory and is not the data
+	// directory itsel
+	if 
+		!path.starts_with(&state.data_dir) ||
+		path.ends_with(&state.data_dir)
+	{
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(SimpleServerResponse {
@@ -347,10 +355,13 @@ async fn move_dir_or_file(
 		.join(query_params.to.clone())
 		.clean();
 
-	// Confirm that the path is part of the data directory
+	// Confirm that the path is part of the data directory and is not the data
+	// directory itsel
 	if
 		!from.starts_with(&state.data_dir) ||
-		!to.starts_with(&state.data_dir)
+		from.ends_with(&state.data_dir) ||
+		!to.starts_with(&state.data_dir) ||
+		to.ends_with(&state.data_dir)
 	{
 		return (
 			StatusCode::BAD_REQUEST,
@@ -621,10 +632,13 @@ async fn copy(
 		.join(query_params.to.clone())
 		.clean();
 
-	// Confirm that the path is part of the data directory
+	// Confirm that the path is part of the data directory and is not the data
+	// directory itsel
 	if
 		!from.starts_with(&state.data_dir) ||
-		!to.starts_with(&state.data_dir)
+		from.ends_with(&state.data_dir) ||
+		!to.starts_with(&state.data_dir) ||
+		to.ends_with(&state.data_dir)
 	{
 		return (
 			StatusCode::BAD_REQUEST,
