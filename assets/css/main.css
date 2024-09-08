@@ -1,0 +1,34 @@
+html, body {
+	height: 100%;
+}
+
+.file-item-icon {
+	font-size: 80px;
+}
+
+.file-item {
+	border-radius: 15px;
+
+	font-weight: 600;
+	font-family: "Monaco", monospace;
+
+	-webkit-user-select: none; /* Safari */
+	-ms-user-select: none; /* IE 10 and IE 11 */
+	user-select: none; /* Standard syntax */
+}
+
+.file-item:active {
+	background-color: #288bce;
+}
+
+.file-item:hover {
+	background-color: #cecfcf;
+}
+
+.folder {
+	color: #416dbe;
+}
+
+.file {
+	color: #906ab3;
+}
