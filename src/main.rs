@@ -27,19 +27,20 @@ async fn main() {
 		.nest_service("/css", ServeDir::new("assets/css"))
 		.nest_service("/bootstrap", ServeDir::new("assets/bootstrap"))
 		.nest_service("/fontawesome", ServeDir::new("assets/fontawesome"))
-		.route("/mkdir", put(create_dir))
-		.route("/rmdir", delete(delete_dir))
-		.route("/ls", get(ls_dir))
-		.route("/mv", put(move_dir_or_file))
-		.route("/download", get(download_file))
-		.route("/rm", delete(delete_file))
-		.route("/upload", put(upload_file))
-		.route("/cp", put(copy))
+		.nest_service("/jquery", ServeDir::new("assets/jquery"))
+		.route("/api/v1/mkdir", put(create_dir))
+		.route("/api/v1/rmdir", delete(delete_dir))
+		.route("/api/v1/ls", get(ls_dir))
+		.route("/api/v1/mv", put(move_dir_or_file))
+		.route("/api/v1/download", get(download_file))
+		.route("/api/v1/rm", delete(delete_file))
+		.route("/api/v1/upload", put(upload_file))
+		.route("/api/v1/cp", put(copy))
 		.with_state(ServerState {data_dir});
 
 	// Create the listener
 	let listener = match tokio::net::TcpListener::bind(
-		"127.0.0.1:3000"
+		"0.0.0.0:3000"
 	).await {
 		Ok(listener) => listener,
 		Err(error) => {
