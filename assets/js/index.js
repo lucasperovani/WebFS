@@ -73,6 +73,16 @@ function convert_path_to_breadcrumb(path) {
 	return home_breadcrumb + breadcrumb;
 }
 
+function select_file_card(file_card) {
+	if ($(file_card).hasClass("selected")) {
+		// If the card is already selected, deselect it
+		$(file_card).removeClass("selected");
+	} else {
+		// Select the card
+		$(file_card).addClass("selected");
+	}
+}
+
 function file_card_html(file, is_dir) {
 	// File name string
 	const filename = $("<p>")
@@ -92,6 +102,7 @@ function file_card_html(file, is_dir) {
 	// Card element with the icon and body
 	const card = $("<div>")
 		.addClass("card mb-4 box-shadow file-item")
+		.attr("onclick", "select_file_card(this)")
 		.append(icon)
 		.append(card_body);
 
@@ -102,7 +113,7 @@ function file_card_html(file, is_dir) {
 	return $("<div>")
 		.addClass("col-md-3")
 		.append(card)
-		.attr("onclick", call_function)
+		.attr("ondblclick", call_function)
 		.prop('outerHTML');
 }
 

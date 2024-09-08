@@ -17,8 +17,8 @@ html, body {
 	user-select: none; /* Standard syntax */
 }
 
-.file-item:active {
-	background-color: #288bce;
+.file-item.selected {
+	background-color: #78b8e4;
 }
 
 .file-item:hover {
@@ -26,7 +26,7 @@ html, body {
 }
 
 .folder {
-	color: #416dbe;
+	color: #a7be41;
 }
 
 .file {
