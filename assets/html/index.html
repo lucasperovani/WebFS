@@ -5,39 +5,45 @@
 
 		<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
 		<link rel="stylesheet" href="bootstrap/css/bootstrap-breadcrumb.css">
+		<link rel="stylesheet" href="fontawesome/css/fontawesome.css">
+		<link rel="stylesheet" href="fontawesome/css/brands.css">
+		<link rel="stylesheet" href="fontawesome/css/solid.css">
+		<link rel="stylesheet" href="css/main.css">
 
-		<script src="js/index.js"></script>
+		<script type="text/javascript" src="bootstrap/js/bootstrap.bundle.min.js"></script>
+		<script type="text/javascript" src="jquery/jquery.js"></script>
+		<script type="text/javascript" src="js/index.js"></script>
 	</head>
-	<body>
+	<body class="container-fluid">
 		<!-- Nav Bar -->
 		<nav class="navbar navbar-expand-md fixed-top mx-3" aria-label="breadcrumb">
 			<!-- Path list -->
-			<ol id="breadcrumb" class="breadcrumb breadcrumb-custom overflow-hidden text-center bg-body-tertiary border rounded-3 w-100">
-				<!-- Home -->
-				<li class="breadcrumb-item">
-				  <a class="link-body-emphasis fw-semibold text-decoration-none" href="#">
-					<svg class="bi" width="16" height="16"><use xlink:href="#house-door-fill"></use></svg>
-					Home
-				  </a>
-				</li>
-				<li class="breadcrumb-item">
-				  <a class="link-body-emphasis fw-semibold text-decoration-none" href="#">Library</a>
-				</li>
-				<li class="breadcrumb-item active" aria-current="page">
-				  Data
-				</li>
-			  </ol>
+			<ol id="breadcrumb" class="breadcrumb breadcrumb-custom overflow-hidden text-center bg-body-tertiary border rounded-3 w-100"></ol>
 		</nav>
 
 		<!-- Files Content -->
-		<div>
+		<div class="">
 			<!-- Loading -->
-			<div id="loading_modal"></div>
+			<div id="loading_spinner" class="position-absolute top-50 start-50 translate-middle" style="display: none;">
+				<i class="fas fa-spinner fa-spin-pulse fa-8x"></i>
+			</div>
+
+			<!-- Error -->
+			<div id="error_display" class="position-absolute top-50 start-50 translate-middle" style="display: none;">
+				<i class="fa-solid fa-xmark fa-10x" style="color: #ff0000;"></i>
+			</div>
 
 			<!-- Files -->
-			<div id="files_list"></div>
+			<div id="files_content" class="w-100" style="margin-top: 100px;">
+				<div id="files_list" class="row d-flex align-content-stretch"></div>
+			</div>
 		</div>
 
-		<script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+		<!-- Add File -->
+		<div id="add_file" class="position-fixed bottom-0 end-0 mb-3 me-3">
+			<button type="button" class="btn btn-primary rounded-circle" aria-label="Add file">
+				<i class="fas fa-plus fa-2x"></i>
+			</button>
+		</div>
 	</body>
 </html>
