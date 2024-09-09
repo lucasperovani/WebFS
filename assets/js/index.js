@@ -4,6 +4,7 @@ const ERROR_DISPLAY_ID = "#error_display";
 const FILE_CONTENT_ID = "#files_content";
 const FILE_LIST_ID = "#files_list";
 const ADD_FILE_BUTTON_ID = "#add_file";
+const FILE_INPUT_ID = "#file_input";
 
 let current_path = ".";
 
@@ -215,14 +216,51 @@ function ls_directory(path) {
 }
 
 /**
- * Adds a file to the current directory.
+ * Adds a file to the current directory, sending it to the server.
  *
  * @returns {void}
  */
-function add_file() {
+async function add_file(event) {
+	// Spin front-end
+	show_spinner();
+
+	// Get the file, file name, and it's buffer
+	const file = event.target.files[0];
+	const file_name = file.name;
+	const file_buffer = await file.arrayBuffer();
+
+	// Send the request to the server
+	$.ajax({
+		url: "/api/v1/upload?path=" + current_path + "/" + file_name,
+		type: "PUT",
+		data: file_buffer,
+		processData: false,
+		contentType: false,
+		success: function(data) {
+			if (!data.success) {
+				show_error();
+				return;
+			}
+
+			// List the directory
+			ls_directory(current_path);
+		},
+		error: function(error) {
+			console.error("Error in add file:", error);
+			show_error();
+		}
+	});
+}
 }
 
 $(document).ready(function() {
 	// Get the home directory
 	ls_directory(".");
+
+	// Add upload file button action
+	$(ADD_FILE_BUTTON_ID).on("click", () => $(FILE_INPUT_ID)[0].click());
+
+	// Add file input change action
+	$(FILE_INPUT_ID).on("change", add_file);
+
 });
