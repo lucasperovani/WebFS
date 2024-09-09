@@ -5,6 +5,7 @@ const FILE_CONTENT_ID = "#files_content";
 const FILE_LIST_ID = "#files_list";
 const ADD_FILE_BUTTON_ID = "#add_file";
 const FILE_INPUT_ID = "#file_input";
+const OPTIONS_MENU_ID = "#options_menu";
 
 let current_path = ".";
 
@@ -264,8 +265,39 @@ async function add_file(event) {
 		}
 	});
 }
+
+/**
+ * Shows the options menu.
+ *
+ * @param {Event} event - The event that triggered the options menu.
+ * @returns {void}
+ */
+function show_options_menu(event) {
+	// Set the position of the options menu
+	$(OPTIONS_MENU_ID).css({
+		top: event.clientY,
+		left: event.clientX
+	});
+
+	// Show the options menu
+	$(OPTIONS_MENU_ID).show();
+
+	// Prevent the default context menu
+	event.preventDefault();
 }
 
+/**
+ * Hides the options menu.
+ *
+ * @returns {void}
+ */
+function hide_options_menu() {
+	$(OPTIONS_MENU_ID).hide();
+}
+
+/**
+ * When HTML document is ready, add event listeners.
+ */
 $(document).ready(function() {
 	// Get the home directory
 	ls_directory(".");
@@ -276,4 +308,6 @@ $(document).ready(function() {
 	// Add file input change action
 	$(FILE_INPUT_ID).on("change", add_file);
 
+	// Add click event to use custom options menu
+	document.addEventListener('contextmenu', show_options_menu, false);
 });
