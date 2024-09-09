@@ -74,6 +74,12 @@ function convert_path_to_breadcrumb(path) {
 	return home_breadcrumb + breadcrumb;
 }
 
+/**
+ * Selects or deselects a file card.
+ *
+ * @param {HTMLElement} file_card - The file card to select.
+ * @returns {void}
+ */
 function select_file_card(file_card) {
 	if ($(file_card).hasClass("selected")) {
 		// If the card is already selected, deselect it
@@ -84,6 +90,13 @@ function select_file_card(file_card) {
 	}
 }
 
+/**
+ * Returns the HTML for a file or directory card.
+ *
+ * @param {object} file - The file object.
+ * @param {boolean} is_dir - Whether the file is a directory.
+ * @returns {string} The HTML for the file card.
+ */
 function file_card_html(file, is_dir) {
 	// File name string
 	const filename = $("<p>")
