@@ -1,12 +1,21 @@
+const BODY_ID = "#body";
+
 const BREADCRUMB_LIST_ID = "#breadcrumb";
 const LOADING_SPINNER_ID = "#loading_spinner";
 const ERROR_DISPLAY_ID = "#error_display";
+
 const FILE_CONTENT_ID = "#files_content";
 const FILE_LIST_ID = "#files_list";
+
 const ADD_FILE_BUTTON_ID = "#add_file";
 const FILE_INPUT_ID = "#file_input";
-const OPTIONS_MENU_ID = "#options_menu";
 
+const OPTIONS_MENU_ID = "#options_menu";
+const ADD_FOLDER = "#add_folder";
+const RENAME_FILE_ID = "#rename_file";
+const DELETE_FILE_ID = "#delete_file";
+
+let long_press_timer;
 let current_path = ".";
 
 /**
@@ -118,6 +127,8 @@ function file_card_html(file, is_dir) {
 	const card = $("<div>")
 		.addClass("card mb-4 box-shadow file-item")
 		.attr("onclick", "select_file_card(this)")
+		.attr("data-file_name", file.name)
+		.attr("data-is_dir", is_dir)
 		.append(icon)
 		.append(card_body);
 
@@ -230,24 +241,19 @@ function ls_directory(path) {
 }
 
 /**
- * Adds a file to the current directory, sending it to the server.
+ * Upload single file to the current directory, sending it to the server.
+ *
+ * @param {string} file_name - The file name to upload.
+ * @param {ArrayBuffer} file_data - The file data to upload.
  *
  * @returns {void}
  */
-async function add_file(event) {
-	// Spin front-end
-	show_spinner();
-
-	// Get the file, file name, and it's buffer
-	const file = event.target.files[0];
-	const file_name = file.name;
-	const file_buffer = await file.arrayBuffer();
-
+function upload_single_file(file_name, file_data) {
 	// Send the request to the server
 	$.ajax({
 		url: "/api/v1/upload?path=" + current_path + "/" + file_name,
 		type: "PUT",
-		data: file_buffer,
+		data: file_data,
 		processData: false,
 		contentType: false,
 		success: function(data) {
@@ -260,10 +266,36 @@ async function add_file(event) {
 			ls_directory(current_path);
 		},
 		error: function(error) {
-			console.error("Error in add file:", error);
+			console.error("Error in upload_files:", error);
 			show_error();
 		}
 	});
+}
+
+/**
+ * Uploads many files to the current directory, sending it to the server.
+ *
+ * @param {Event} event - The change event received.
+ *
+ * @returns {void}
+ */
+async function upload_files(event) {
+	// Spin front-end
+	show_spinner();
+
+	// Get the file, file name, and it's buffer
+	const files = event.target.files;
+
+	// Skip if no files
+	if (!files.length) return;
+
+	// Loop through the files
+	for (const file of files) {
+		const file_name = file.name;
+		const file_buffer = await file.arrayBuffer();
+
+		upload_single_file(file_name, file_buffer);
+	}
 }
 
 /**
@@ -275,12 +307,13 @@ async function add_file(event) {
 function show_options_menu(event) {
 	// Set the position of the options menu
 	$(OPTIONS_MENU_ID).css({
-		top: event.clientY,
-		left: event.clientX
+		top: event.clientY - 15,
+		left: event.clientX - 15,
 	});
 
 	// Show the options menu
 	$(OPTIONS_MENU_ID).show();
+	$(OPTIONS_MENU_ID).find("ul").addClass("d-block");
 
 	// Prevent the default context menu
 	event.preventDefault();
@@ -293,6 +326,51 @@ function show_options_menu(event) {
  */
 function hide_options_menu() {
 	$(OPTIONS_MENU_ID).hide();
+	$(OPTIONS_MENU_ID).find("ul").removeClass("d-block");
+}
+
+/**
+ * Deletes the selected files.
+ *
+ * @returns {void}
+ */
+function delete_files() {
+	// Get the selected files
+	const selected_files = $(".file-item.selected");
+
+	// Loop through the selected files
+	for (const file of selected_files) {
+		// Get the file name and file type
+		const file_name = $(file).data("file_name");
+		const is_folder = $(file).data("is_dir");
+
+		const delete_type = is_folder ? "rmdir" : "rm";
+		const url  =
+			"/api/v1/" + delete_type +
+			"?path=" + current_path + "/" + file_name;
+
+		// Send the request to the server
+		$.ajax({
+			url: url,
+			type: "DELETE",
+			success: function(data) {
+				if (!data.success) {
+					show_error();
+					return;
+				}
+
+				// List the directory
+				ls_directory(current_path);
+
+				// Hide the options menu
+				hide_options_menu();
+			},
+			error: function(error) {
+				console.error("Error in delete_files:", error);
+				show_error();
+			}
+		});
+	}
 }
 
 /**
@@ -306,8 +384,21 @@ $(document).ready(function() {
 	$(ADD_FILE_BUTTON_ID).on("click", () => $(FILE_INPUT_ID)[0].click());
 
 	// Add file input change action
-	$(FILE_INPUT_ID).on("change", add_file);
+	$(FILE_INPUT_ID).on("change", upload_files);
 
 	// Add click event to use custom options menu
 	document.addEventListener('contextmenu', show_options_menu, false);
+
+	// Add event to hide options menu when mouse leaves
+	$(OPTIONS_MENU_ID).on("mouseleave", hide_options_menu);
+
+	// Add long press event to use custom options menu
+	$(BODY_ID).on("pointerdown", function(event) {
+		long_press_timer = setTimeout(() => show_options_menu(event), 250);
+	}).on("pointerup", function() {
+		clearTimeout(long_press_timer);
+	});
+
+	// Add delete file action
+	$(DELETE_FILE_ID).on("click", delete_files);
 });
