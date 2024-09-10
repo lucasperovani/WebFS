@@ -2,6 +2,10 @@ html, body {
 	height: 100%;
 }
 
+.no-pointer {
+	pointer-events: none;
+}
+
 .file-item-icon {
 	font-size: 80px;
 }
