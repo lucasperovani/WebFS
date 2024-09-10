@@ -15,7 +15,7 @@
 		<script type="text/javascript" src="jquery/jquery.js"></script>
 		<script type="text/javascript" src="js/index.js"></script>
 	</head>
-	<body class="container-fluid">
+	<body id="body" class="container-fluid">
 		<!-- Nav Bar -->
 		<nav class="navbar navbar-expand-md fixed-top mx-3" aria-label="breadcrumb">
 			<!-- Path list -->
@@ -45,23 +45,29 @@
 			<button type="button" class="btn btn-primary rounded-circle" aria-label="Add file">
 				<i class="fas fa-plus fa-4x"></i>
 			</button>
-			<input type="file" id="file_input" class="d-none" aria-label="File upload"/>
+			<input type="file" id="file_input" class="d-none" aria-label="File upload" multiple/>
 		</div>
 
 		<!-- Options Menu -->
-		<div id="options_menu" class="position-fixed d-flex flex-column flex-md-row gap-4 align-items-center justify-content-center">
-			<ul class="dropdown-menu d-block position-static mx-0 shadow w-220px">
+		<div id="options_menu" class="position-fixed d-flex flex-column flex-md-row gap-4 p-3 align-items-center justify-content-center" style="display: none;">
+			<ul class="dropdown-menu position-static mx-0 shadow w-220px">
 				<li>
-					<a class="dropdown-item d-flex gap-2 align-items-center" href="#">
-						<i class="fa-solid fa-plus"></i>
-						Nova Pasta
+					<a id="add_folder" class="dropdown-item d-flex gap-2 align-items-center" href="#">
+						<i class="fa-solid fa-folder"></i>
+						<label class="no-pointer">Nova Pasta</label>
+					</a>
+				</li>
+				<li>
+					<a id="rename_file" class="dropdown-item d-flex gap-2 align-items-center" href="#">
+						<i class="fa-solid fa-pen-to-square"></i>
+						<label class="no-pointer">Renomear</label>
 					</a>
 				</li>
 				<li><hr class="dropdown-divider"></li>
 				<li>
-					<a class="dropdown-item dropdown-item-danger d-flex gap-2 align-items-center" href="#">
+					<a id="delete_file" class="dropdown-item dropdown-item-danger d-flex gap-2 align-items-center" href="#">
 						<i class="fa-solid fa-trash"></i>
-						Deletar
+						<label class="no-pointer">Deletar</label>
 					</a>
 				</li>
 			</ul>
