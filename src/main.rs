@@ -153,6 +153,7 @@ async fn ls_dir(
 		);
 	}
 
+	// If the path does not exist return error
 	if !path.try_exists().unwrap_or(false) {
 		return (
 			StatusCode::NOT_FOUND,
@@ -164,6 +165,7 @@ async fn ls_dir(
 		);
 	}
 
+	// If the path is not a directory return error
 	if !path.is_dir() {
 		return (
 			StatusCode::BAD_REQUEST,
@@ -175,6 +177,7 @@ async fn ls_dir(
 		);
 	}
 
+	// Read the directory
 	let directory_entries = match path.read_dir() {
 		Ok(entries) => entries,
 		Err(err) => return (
@@ -187,6 +190,7 @@ async fn ls_dir(
 		),
 	};
 
+	// Iterate over the directory entries
 	let mut entries = vec![];
 	for entry in directory_entries {
 		let entry = match entry {
@@ -204,6 +208,7 @@ async fn ls_dir(
 			),
 		};
 
+		// Get the metadata of the entry
 		let metadata = match entry.metadata() {
 			Ok(metadata) => metadata,
 			Err(error) => return (
@@ -216,6 +221,7 @@ async fn ls_dir(
 			),
 		};
 
+		// Create the file info
 		let file = FileInfo {
 			name: entry
 				.file_name()
