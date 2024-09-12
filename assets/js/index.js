@@ -224,7 +224,7 @@ function file_card_html(file, is_dir) {
 		"ls_directory(\"" + current_path + "/" + file.name + "\")" : "";
 
 	return $("<div>")
-		.addClass("col-md-3")
+		.addClass("col-6 col-md-3 col-lg-2")
 		.append(card)
 		.attr("ondblclick", call_function)
 		.prop('outerHTML');
