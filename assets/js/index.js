@@ -12,7 +12,6 @@ const FILE_INPUT_ID = "#file_input";
 
 const OPTIONS_MENU_ID = "#options_menu";
 const ADD_FOLDER = "#add_folder";
-const RENAME_FILE_ID = "#rename_file";
 const DELETE_FILE_ID = "#delete_file";
 
 let long_press_timer;
@@ -101,6 +100,82 @@ function select_file_card(file_card) {
 }
 
 /**
+ * Sets the height of the file name textarea.
+ *
+ * @param {HTMLElement} file_name_textarea - The file name textarea element.
+ * @returns {void}
+ */
+function set_file_name_height(file_name_textarea) {
+	file_name_textarea.style.height = 0;
+	file_name_textarea.style.height = file_name_textarea.scrollHeight + "px";
+}
+
+/**
+ * Allows the user to edit the file name of a file/folder.
+ *
+ * @param {HTMLElement} file_name_textarea - The file name textarea element.
+ * @param {Event} event - The event that triggered the file name edit.
+ * @returns {void}
+ */
+function file_name_edit(file_input, event) {
+	// Stop the event to being propagated to parent elements
+	event.stopPropagation();
+
+	// Get the file name element
+	$(file_input).attr("readonly", false);
+}
+
+/**
+ * Renames a file or folder.
+ *
+ * @param {HTMLElement} file_input - The file input element.
+ * @returns {void}
+ */
+function rename_file(file_input) {
+	// Make the file input read-only again
+	$(file_input).attr("readonly", true);
+
+	// Get the new file name
+	const new_file_name = $(file_input).val();
+
+	// Get the old file name
+	const old_file_name = $(file_input)
+		.closest(".file-item")
+		.data("file_name");
+
+	// Skip if the file name is the same
+	if (new_file_name === old_file_name) {
+		return;
+	}
+
+	// Get the URL for the request
+	const url  =
+		"/api/v1/mv" +
+		"?from=" + current_path + "/" + old_file_name +
+		"&to=" + current_path + "/" + new_file_name;
+
+	// Send the request to the server
+	$.ajax({
+		url: url,
+		type: "PUT",
+		success: function(data) {
+			if (!data.success) {
+				console.error("Error in rename_file success:", data.message);
+				$(file_input).val(old_file_name);
+				return;
+			}
+
+			// List the directory
+			ls_directory(current_path);
+		},
+		error: function(error) {
+			console.error("Error in rename_file error:", error);
+			$(file_input).val(old_file_name);
+		}
+	});
+}
+
+/**
  * Returns the HTML for a file or directory card.
  *
  * @param {object} file - The file object.
@@ -109,9 +184,21 @@ function select_file_card(file_card) {
  */
 function file_card_html(file, is_dir) {
 	// File name string
-	const filename = $("<p>")
-		.addClass("card-text text-center")
-		.text(file.name);
+	const filename = $("<textarea>")
+		.addClass("card-text text-center bg-transparent w-100 border-0")
+		.css({
+			"resize": "none",
+			"box-sizing": "border-box",
+			"height": "28px",
+			"overflow-y": "hidden"
+		})
+		.attr("readonly", "true")
+		.attr("onclick", "event.stopPropagation()")
+		.attr("ondblclick", "file_name_edit(this, event)")
+		.attr("onblur", "rename_file(this)")
+		.attr("oninput", "set_file_name_height(this)")
+		.attr("maxlength", "255")
+		.append(file.name);
 
 	// Card body with the file name
 	const card_body = $("<div>")
@@ -335,8 +422,14 @@ function hide_options_menu() {
  * @returns {void}
  */
 function delete_files() {
+	// Hide the options menu
+	hide_options_menu();
+
 	// Get the selected files
 	const selected_files = $(".file-item.selected");
+
+	// Skip if no files are selected
+	if (!selected_files.length) return;
 
 	// Loop through the selected files
 	for (const file of selected_files) {
@@ -344,6 +437,7 @@ function delete_files() {
 		const file_name = $(file).data("file_name");
 		const is_folder = $(file).data("is_dir");
 
+		// Build the URL for the request based on file/folder
 		const delete_type = is_folder ? "rmdir" : "rm";
 		const url  =
 			"/api/v1/" + delete_type +
@@ -374,6 +468,93 @@ function delete_files() {
 }
 
 /**
+ * Creates a new folder in the current directory.
+ *
+ * @param {HTMLElement} folder_name_textarea - The folder name textarea element.
+ * @returns {void}
+ */
+function create_folder(folder_name_textarea) {
+
+	// Get the new folder name
+	const folder_name = $(folder_name_textarea).val();
+
+	// Get the URL for the request
+	const url  = "/api/v1/mkdir?path=" + current_path + "/" + folder_name;
+
+	// Send the request to the server
+	$.ajax({
+		url: url,
+		type: "PUT",
+		success: function(data) {
+			if (!data.success) {
+				console.error("Error in create_folder success:", data.message);
+			}
+
+			// List the directory
+			ls_directory(current_path);
+		},
+		error: function(error) {
+			console.error("Error in create_folder error:", error);
+			ls_directory(current_path);
+		}
+	});
+}
+
+/**
+ * Adds a folder to the current directory.
+ *
+ * @returns {void}
+ */
+function add_folder(event) {
+	// Stop link click
+	event.preventDefault();
+
+	// Hide the options menu
+	hide_options_menu();
+
+	// File name string
+	const filename = $("<textarea>")
+		.addClass("card-text text-center bg-transparent w-100 border-0")
+		.css({
+			"resize": "none",
+			"box-sizing": "border-box",
+			"height": "28px",
+			"overflow-y": "hidden"
+		})
+		.attr("onblur", "create_folder(this)")
+		.attr("oninput", "set_file_name_height(this)")
+		.attr("maxlength", "255")
+		.append("Nova Pasta");
+
+	// Card body with the file name
+	const card_body = $("<div>")
+		.addClass("card-body")
+		.append(filename);
+
+	// File icon element
+	const icon = $("<i>")
+		.addClass("fas card-img-top text-center file-item-icon mt-3")
+		.addClass("fa-folder folder");
+
+	// Card element with the icon and body
+	const card = $("<div>")
+		.addClass("card mb-4 box-shadow file-item")
+		.append(icon)
+		.append(card_body);
+
+	// Add the folder to the page
+	const folder =  $("<div>")
+		.addClass("col-md-3")
+		.append(card);
+
+	$(FILE_LIST_ID)
+		.append(folder)
+		.find('textarea:last')
+		.focus()
+		.select();
+}
+
+/**
  * When HTML document is ready, add event listeners.
  */
 $(document).ready(function() {
@@ -398,6 +579,9 @@ $(document).ready(function() {
 	}).on("pointerup", function() {
 		clearTimeout(long_press_timer);
 	});
+
+	// Add create folder action
+	$(ADD_FOLDER).on("click", add_folder);
 
 	// Add delete file action
 	$(DELETE_FILE_ID).on("click", delete_files);
