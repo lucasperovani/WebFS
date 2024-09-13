@@ -175,6 +175,9 @@ function rename_file(file_input) {
 	});
 }
 
+function show_file(file) {
+}
+
 /**
  * Returns the HTML for a file or directory card.
  *

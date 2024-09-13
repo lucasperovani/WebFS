@@ -17,7 +17,7 @@
 	</head>
 	<body id="body" class="container-fluid">
 		<!-- Nav Bar -->
-		<nav class="navbar navbar-expand-md fixed-top mx-3" aria-label="breadcrumb">
+		<nav class="navbar navbar-expand-md fixed-top mx-3 z-2" aria-label="breadcrumb">
 			<!-- Path list -->
 			<ol id="breadcrumb" class="breadcrumb breadcrumb-custom overflow-hidden text-center bg-body-tertiary border rounded-3 w-100"></ol>
 		</nav>
@@ -65,6 +65,51 @@
 					</a>
 				</li>
 			</ul>
+		</div>
+
+		<!-- File Display -->
+		<div id="file_display" class="bg-black fixed-top h-100 w-100 z-3 bg-opacity-75" style="backdrop-filter: blur(10px);" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()" oncontextmenu="event.stopPropagation()">
+			<!-- Download, Close row -->
+			<div class="d-flex flex-row-reverse mt-3">
+				<div class="mx-3">
+					<button id="close_file" class="btn btn-danger rounded-circle" aria-label="Close file">
+						<i class="fas fa-times fa-2x"></i>
+					</button>
+				</div>
+				<div>
+					<button id="download_file" class="btn btn-primary rounded-circle" aria-label="Download file">
+						<i class="fas fa-download fa-2x"></i>
+					</button>
+				</div>
+			</div>
+
+			<!-- File Display -->
+			<div id="file_display_content" class="position-absolute top-50 start-50 translate-middle" style="display: none;">
+				<!-- Image -->
+				<div id="file_display_image" class="d-none">
+					<img id="file_display_image_content" class="img-fluid" src="" alt="File Display"/>
+				</div>
+
+				<!-- Video -->
+				<div id="file_display_video" class="d-none">
+					<video id="file_display_video_content" class="w-100" controls>
+						<source src="" type="video/mp4"/>
+						Your browser does not support the video tag.
+					</video>
+				</div>
+
+				<!-- Audio -->
+				<div id="file_display_audio" class="d-none">
+					<audio id="file_display_audio_content" class="w-100" controls>
+						<source src="" type="audio/mpeg"/>
+						Your browser does not support the audio tag.
+					</audio>
+				</div>
+
+				<!-- Text -->
+				<div id="file_display_text" class="d-none">
+					<textarea id="file_display_text_content" class="form-control" rows="10" readonly></textarea>
+				</div>
 		</div>
 	</body>
 </html>
