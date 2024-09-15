@@ -137,6 +137,12 @@ struct DirectoryQuery {
 }
 
 #[derive(Deserialize)]
+struct DownloadDirectoryQuery {
+	path: String,
+	peek: Option<bool>,
+}
+
+#[derive(Deserialize)]
 struct MoveQuery {
 	from: String,
 	to: String,
@@ -474,7 +480,7 @@ fn copy_dir_all(
 /// Return the file to download
 async fn download_file(
 	State(state): State<ServerState>,
-	query_params: Query<DirectoryQuery>,
+	query_params: Query<DownloadDirectoryQuery>,
 ) -> impl IntoResponse {
 	let path = Path::new(&state.data_dir)
 		.join(query_params.path.clone())
@@ -509,17 +515,28 @@ async fn download_file(
 	// convert the `Stream` into an `axum::body::HttpBody`
 	let body = Body::from_stream(stream);
 
-	let headers = [(
-		header::CONTENT_TYPE,
-		format!("{:?}; charset=utf-8", mime_guess::from_path(&path).first()),
-	),(
-		header::CONTENT_DISPOSITION,
-		format!(
-			"attachment; filename={:?}",
-			path.file_name().unwrap_or(std::ffi::OsStr::new("unknown"))
-		),
-	)];
+	// Guess the mime type of the file
+	let mime = mime_guess::from_path(&path)
+		.first_or_octet_stream();
 
+	// Format Dispotion header
+	let disposition = format!(
+		"attachment; filename={:?}",
+		path.file_name().unwrap_or(std::ffi::OsStr::new("unknown"))
+	);
+
+	// Set the headers
+	let headers = match query_params.peek.unwrap_or(false) {
+		false => [
+			(header::CONTENT_TYPE, format!("{}", mime)),
+			(header::CONTENT_DISPOSITION, disposition)
+		],
+		true => [
+			(header::CONTENT_TYPE, format!("{}", mime)),
+			(header::CONTENT_DISPOSITION, "".to_string())
+		],
+	};
+	
 	Ok((headers, body).into_response())
 }
 
