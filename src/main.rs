@@ -19,8 +19,18 @@ use colored::Colorize;
 #[tokio::main]
 async fn main() {
 	// Set the data directory
-	let data_dir =
-		"\\\\?\\C:\\Users\\lucas\\OneDrive\\Documents\\Projetos".to_string();
+	let data_dir = match std::env::var("DATA_DIR") {
+		Ok(data_dir) => data_dir,
+		Err(_) => {
+			eprintln!(
+				"\n{}\n{}\n",
+				"❌ DATA_DIR environment variable not set!".bold().red(),
+				"Please set the DATA_DIR environment variable to the path \
+				of the data directory!"
+			);
+			return;
+		}
+	};
 
 	// Set Socket Address
 	let address = SocketAddr::from(([127, 0, 0, 1], 3000));
