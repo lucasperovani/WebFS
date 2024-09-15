@@ -68,48 +68,56 @@
 		</div>
 
 		<!-- File Display -->
-		<div id="file_display" class="bg-black fixed-top h-100 w-100 z-3 bg-opacity-75" style="backdrop-filter: blur(10px);" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()" oncontextmenu="event.stopPropagation()">
-			<!-- Download, Close row -->
+		<div id="file_display" class="bg-black fixed-top vh-100 w-100 z-3 bg-opacity-75" style="backdrop-filter: blur(10px); display: none;" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()" oncontextmenu="event.stopPropagation()">
+			<!-- File Name, Download, Close row -->
 			<div class="d-flex flex-row-reverse mt-3">
+				<!-- Close Button -->
 				<div class="mx-3">
 					<button id="close_file" class="btn btn-danger rounded-circle" aria-label="Close file">
 						<i class="fas fa-times fa-2x"></i>
 					</button>
 				</div>
+				<!-- Download Button -->
 				<div>
-					<button id="download_file" class="btn btn-primary rounded-circle" aria-label="Download file">
+					<a id="download_file" class="btn btn-primary rounded-circle" aria-label="Download file">
 						<i class="fas fa-download fa-2x"></i>
-					</button>
+					</a>
+				</div>
+				<!-- File Name-->
+				<div class="ms-auto me-auto align-self-center fs-2">
+					<label id="file_name" class="text-white">TestFilename.txt</label>
 				</div>
 			</div>
 
-			<!-- File Display -->
-			<div id="file_display_content" class="position-absolute top-50 start-50 translate-middle" style="display: none;">
-				<!-- Image -->
-				<div id="file_display_image" class="d-none">
-					<img id="file_display_image_content" class="img-fluid" src="" alt="File Display"/>
+			<div class="row h-75 mx-3 mb-n5 justify-content-center">
+				<!-- Previous File -->
+				<div class="col-2 d-flex align-items-center">
+					<button id="previous_file" class="btn btn-primary rounded-circle" aria-label="Previous file">
+						<i class="fas fa-chevron-left fa-2x"></i>
+					</button>
+				</div>
+				<!-- Text File -->
+				<textarea id="text_file_display" class="col-8 bg-white" style="white-space: pre-line; resize: none;" readonly></textarea>
+				<!-- Image File -->
+				<img id="image_file_display"class="col-8 m-auto" style="object-fit: contain; max-height: 100%; max-width: 100%;"/>
+				<!-- Video File -->
+				<video id="video_file_display" class="col-8 m-auto" style="object-fit: contain; max-height: 100%; max-width: 100%;" controls></video>
+				<!-- Audio File -->
+				<audio id="audio_file_display" class="col-8 m-auto" controls></audio>
+				<!-- PDF File -->
+				<iframe id="pdf_file_display" class="col-8" style="object-fit: contain; max-height: 100%; max-width: 100%;" type="application/pdf"></iframe>
+				<!-- Unknown File -->
+				<div id="unknown_file_display" class="col-8 my-auto text-center text-light">
+					<i class="fa-solid fa-file fa-10x"></i>
 				</div>
 
-				<!-- Video -->
-				<div id="file_display_video" class="d-none">
-					<video id="file_display_video_content" class="w-100" controls>
-						<source src="" type="video/mp4"/>
-						Your browser does not support the video tag.
-					</video>
+				<!-- Next File -->
+				<div class="col-2 d-flex align-items-center justify-content-end">
+					<button id="next_file" class="btn btn-primary rounded-circle" aria-label="Next file">
+						<i class="fas fa-chevron-right fa-2x"></i>
+					</button>
 				</div>
-
-				<!-- Audio -->
-				<div id="file_display_audio" class="d-none">
-					<audio id="file_display_audio_content" class="w-100" controls>
-						<source src="" type="audio/mpeg"/>
-						Your browser does not support the audio tag.
-					</audio>
-				</div>
-
-				<!-- Text -->
-				<div id="file_display_text" class="d-none">
-					<textarea id="file_display_text_content" class="form-control" rows="10" readonly></textarea>
-				</div>
+			</div>
 		</div>
 	</body>
 </html>
