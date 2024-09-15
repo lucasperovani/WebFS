@@ -14,8 +14,24 @@ const OPTIONS_MENU_ID = "#options_menu";
 const ADD_FOLDER = "#add_folder";
 const DELETE_FILE_ID = "#delete_file";
 
+const FILE_DISPLAY_ID = "#file_display";
+const FILE_DISPLAY_CLOSE_ID = "#close_file";
+const FILE_NAME_DISPLAY_ID = "#file_name";
+const DOWNLOAD_FILE_ID = "#download_file";
+
+const PREV_FILE_ID = "#prev_file";
+const NEXT_FILE_ID = "#next_file";
+
+const TEXT_FILE_DISPLAY_ID = "#text_file_display";
+const IMAGE_FILE_DISPLAY_ID = "#image_file_display";
+const VIDEO_FILE_DISPLAY_ID = "#video_file_display";
+const AUDIO_FILE_DISPLAY_ID = "#audio_file_display";
+const PDF_FILE_DISPLAY_ID = "#pdf_file_display";
+const UNKNOWN_FILE_DISPLAY_ID = "#unknown_file_display";
+
 let long_press_timer;
 let current_path = ".";
+let file_list = [];
 
 /**
  * Returns the breadcrumb element for the home page.
@@ -175,7 +191,94 @@ function rename_file(file_input) {
 	});
 }
 
-function show_file(file) {
+function get_file(file_name) {
+	// Get the URL for the request
+	const path = "path=" + current_path + "/" + file_name;
+	let url  = "/api/v1/download?" + path;
+
+	// Stop any media playing
+	$(AUDIO_FILE_DISPLAY_ID).trigger("pause");
+	$(VIDEO_FILE_DISPLAY_ID).trigger("pause");
+
+	// Hide everything
+	$(TEXT_FILE_DISPLAY_ID).hide();
+	$(IMAGE_FILE_DISPLAY_ID).hide();
+	$(VIDEO_FILE_DISPLAY_ID).hide();
+	$(AUDIO_FILE_DISPLAY_ID).hide();
+	$(PDF_FILE_DISPLAY_ID).hide();
+	$(UNKNOWN_FILE_DISPLAY_ID).hide();
+
+	// File name
+	$(FILE_NAME_DISPLAY_ID).text(file_name);
+
+	// Get the file from the file list
+	const fileIndex = file_list.findIndex((file) => file.name === file_name);
+
+	// If file not found, return
+	if (fileIndex < 0 || !file_list.length) {
+		console.error("File not found in file list:", file_name);
+		return;
+	}
+
+	// Set the Download button URL
+	$(DOWNLOAD_FILE_ID).attr("href", url);
+
+	// Add the peek query parameter to only get the source
+	url += "&peek=true";
+	
+	// Get the file and the previous and next file
+	const file = file_list[fileIndex];
+	const previousFile =
+		file_list[fileIndex - 1] || file_list[file_list.length - 1];
+	const nextFile =
+		file_list[fileIndex + 1] || file_list[0];
+
+	// Set the previous and next file buttons
+	$(PREV_FILE_ID).attr("onclick", "get_file('" + previousFile.name + "')");
+	$(NEXT_FILE_ID).attr("onclick", "get_file('" + nextFile.name + "')");
+	
+	// Check file type
+	if (file.mime.includes("image/")) {
+		// If image just set the source and show
+		$(IMAGE_FILE_DISPLAY_ID)
+			.attr("src", url)
+			.show();
+	} else if (file.mime.includes("text/")) {
+		// If text file, get the text and show
+		$.ajax({
+			url: url,
+			type: "GET",
+			success: function(data) {
+				$(TEXT_FILE_DISPLAY_ID)
+					.text(data)
+					.show();
+			},
+			error: function(error) {
+				console.error("Error in get_file error:", error);
+			}
+		});
+	} else if (file.mime.includes("video/")) {
+		// If video file, set the source and show
+		$(VIDEO_FILE_DISPLAY_ID)
+			.attr("src", url)
+			.show();
+	} else if (file.mime.includes("audio/")) {
+		// If audio file, set the source and show
+		$(AUDIO_FILE_DISPLAY_ID)
+			.attr("src", url)
+			.show();
+	} else if (file.mime.includes("application/pdf")) {
+		// If PDF file, set the source and show
+		$(PDF_FILE_DISPLAY_ID)
+			.attr("src", url)
+			.show();
+	} else {
+		// If unknown file type, just show the download button
+		$(UNKNOWN_FILE_DISPLAY_ID).show();
+	}
+
+	// Show the file display
+	$(FILE_DISPLAY_ID).show();
 }
 
 /**
@@ -224,7 +327,8 @@ function file_card_html(file, is_dir) {
 
 	// Call function
 	const call_function = is_dir ?
-		"ls_directory(\"" + current_path + "/" + file.name + "\")" : "";
+		"ls_directory(\"" + current_path + "/" + file.name + "\")" :
+		"get_file(\"" + file.name + "\")";
 
 	return $("<div>")
 		.addClass("col-6 col-md-3 col-lg-2")
@@ -246,8 +350,16 @@ function load_file_list(data) {
 		return;
 	}
 
+	// Clean the file list
+	file_list = [];
+
 	// Loop through the files
 	const files_html = data.files.map((file) => {
+		// Add only files, not directories, to the file list
+		if (!file.is_dir) {
+			file_list.push(file);
+		}
+
 		return file_card_html(file, file.is_dir);
 	}).join("");
 
@@ -588,4 +700,14 @@ $(document).ready(function() {
 
 	// Add delete file action
 	$(DELETE_FILE_ID).on("click", delete_files);
+
+	// On File Display Close
+	$(FILE_DISPLAY_CLOSE_ID).on("click", () => {
+		// Stop any media playing
+		$(AUDIO_FILE_DISPLAY_ID).trigger("pause");
+		$(VIDEO_FILE_DISPLAY_ID).trigger("pause");
+
+		// Hide the file display
+		$(FILE_DISPLAY_ID).hide();
+	});
 });
