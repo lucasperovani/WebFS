@@ -29,6 +29,10 @@ html, body {
 	background-color: #cecfcf;
 }
 
+.file-item.selected:hover {
+	background-color: #78b8e4;
+}
+
 .folder {
 	color: #c4b745;
 }
