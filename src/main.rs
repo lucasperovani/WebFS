@@ -121,6 +121,7 @@ struct FileInfo {
 	name: String,
 	size: u64,
 	is_dir: bool,
+	mime: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -236,6 +237,17 @@ async fn ls_dir(
 			),
 		};
 
+		// Get the mime type of the file
+		let mime = if metadata.is_dir() {
+			None
+		} else {
+			Some(
+				mime_guess::from_path(&entry.path())
+					.first_or_octet_stream()
+					.to_string()
+			)
+		};
+
 		// Create the file info
 		let file = FileInfo {
 			name: entry
@@ -244,6 +256,7 @@ async fn ls_dir(
 				.unwrap_or("unknown".to_string()),
 			size: metadata.len(),
 			is_dir: metadata.is_dir(),
+			mime: mime,
 		};
 
 		entries.push(file);
