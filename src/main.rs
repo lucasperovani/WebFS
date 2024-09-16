@@ -33,7 +33,11 @@ async fn main() {
 	};
 
 	// Set Socket Address
-	let address = SocketAddr::from(([127, 0, 0, 1], 3000));
+	let port: u16 = match std::env::var("PORT") {
+		Ok(port) => port.parse().unwrap_or(3000),
+		Err(_) => 3000,
+	};
+	let address = SocketAddr::from(([0, 0, 0, 0], port));
 	
 	// Build application
 	let app = Router::new()
@@ -55,7 +59,7 @@ async fn main() {
 
 	// Create the listener
 	let listener = match tokio::net::TcpListener::bind(
-		"0.0.0.0:3000"
+		address
 	).await {
 		Ok(listener) => listener,
 		Err(error) => {
