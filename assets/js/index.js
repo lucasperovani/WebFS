@@ -29,6 +29,11 @@ const AUDIO_FILE_DISPLAY_ID = "#audio_file_display";
 const PDF_FILE_DISPLAY_ID = "#pdf_file_display";
 const UNKNOWN_FILE_DISPLAY_ID = "#unknown_file_display";
 
+const DELETE_FILE_MODAL_ID = "#delete_file_warning_modal";
+const DELETE_FILE_TEXT_ID = "#delete_file_warning_message";
+const DELETE_FILE_MODAL_CANCEL_ID = "#cancel_delete";
+const DELETE_FILE_MODAL_CONFIRM_ID = "#confirm_delete";
+
 let long_press_timer;
 let current_path = ".";
 let file_list = [];
@@ -106,6 +111,11 @@ function convert_path_to_breadcrumb(path) {
  * @returns {void}
  */
 function select_file_card(file_card) {
+	// If delete warning is shown, return
+	if ($(DELETE_FILE_MODAL_ID).is(":visible")) {
+		return;
+	}
+
 	if ($(file_card).hasClass("selected")) {
 		// If the card is already selected, deselect it
 		$(file_card).removeClass("selected");
@@ -507,6 +517,11 @@ async function upload_files(event) {
  * @returns {void}
  */
 function show_options_menu(event) {
+	// Only show the options menu if delete warning is not shown
+	if ($(DELETE_FILE_MODAL_ID).is(":visible")) {
+		return;
+	}
+
 	// Set the position of the options menu
 	$(OPTIONS_MENU_ID).css({
 		top: event.clientY - 15,
@@ -537,8 +552,8 @@ function hide_options_menu() {
  * @returns {void}
  */
 function delete_files() {
-	// Hide the options menu
-	hide_options_menu();
+	// Hide the delete warning
+	$(DELETE_FILE_MODAL_ID).hide();
 
 	// Get the selected files
 	const selected_files = $(".file-item.selected");
@@ -580,6 +595,30 @@ function delete_files() {
 			}
 		});
 	}
+}
+
+/**
+ * Shows the delete warning.
+ *
+ * @returns {void}
+ */
+function show_delete_warning() {
+	// Hide the options menu
+	hide_options_menu();
+
+	// Get the selected files
+	const selected_files = $(".file-item.selected");
+
+	// Skip if no files are selected
+	if (!selected_files.length) return;
+
+	// Display the message based on the number of files
+	$(DELETE_FILE_TEXT_ID).text(
+		`Tem certeza que deseja excluir ${selected_files.length} arquivo(s)?`,
+	);
+
+	// Show the delete warning
+	$(DELETE_FILE_MODAL_ID).show();
 }
 
 /**
@@ -699,7 +738,15 @@ $(document).ready(function() {
 	$(ADD_FOLDER).on("click", add_folder);
 
 	// Add delete file action
-	$(DELETE_FILE_ID).on("click", delete_files);
+	$(DELETE_FILE_ID).on("click", show_delete_warning);
+
+	// Add delete file modal cancel action
+	$(DELETE_FILE_MODAL_CANCEL_ID).on(
+		"click", () => $(DELETE_FILE_MODAL_ID).hide()
+	);
+
+	// Add delete file modal confirm action
+	$(DELETE_FILE_MODAL_CONFIRM_ID).on("click", delete_files);
 
 	// On File Display Close
 	$(FILE_DISPLAY_CLOSE_ID).on("click", () => {

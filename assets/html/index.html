@@ -52,6 +52,7 @@
 		<div id="options_menu" class="position-fixed d-flex flex-column flex-md-row gap-4 p-3 align-items-center justify-content-center" style="display: none;">
 			<ul class="dropdown-menu position-static mx-0 shadow w-220px">
 				<li>
+					<!-- Add Folder Button -->
 					<a id="add_folder" class="dropdown-item d-flex gap-2 align-items-center" href="#">
 						<i class="fa-solid fa-folder"></i>
 						<label class="no-pointer">Nova Pasta</label>
@@ -59,12 +60,41 @@
 				</li>
 				<li><hr class="dropdown-divider"></li>
 				<li>
+					<!-- Delete Button -->
 					<a id="delete_file" class="dropdown-item dropdown-item-danger d-flex gap-2 align-items-center" href="#">
 						<i class="fa-solid fa-trash"></i>
 						<label class="no-pointer">Deletar</label>
 					</a>
 				</li>
 			</ul>
+		</div>
+
+		<!-- Delete File Warning -->
+		<div id="delete_file_warning_modal" style="display: none;" class="position-fixed start-50 top-50 translate-middle bg-white border flex-column pt-2 rounded-3 align-items-center justify-content-center shadow">
+			<!-- Warning Title -->
+			<div class="text-center mx-3 align-middle">
+				<i class="fas fa-exclamation-triangle fa-3x text-danger align-middle"></i>
+				<label class="fs-3 align-middle">Realmente deseja deletar?</label>
+			</div>
+
+			<!-- Warning Message -->
+			<div class="text-center mx-3 my-3">
+				<label id="delete_file_warning_message" class="fs-5">Realmente deseja deletar 3424 arquivos?</label>
+			</div>
+
+			<!-- Buttons -->
+			<div class="d-flex w-100 border-top rounded-bottom">
+				<!-- Cancel Button -->
+				<button id="cancel_delete" class="btn btn-lg fs-6 text-decoration-none col-6 py-3 m-0 rounded-0 border-end" aria-label="Cancel delete" href="#">
+					<i class="fas fa-times text-primary"></i>
+					<strong class="text-primary">Cancelar</strong>
+				</button>
+				<!-- Confirm Button -->
+				<button id="confirm_delete" class="btn btn-lg fs-6 text-decoration-none col-6 py-3 m-0 rounded-0" aria-label="Confirm delete">
+					<i class="fas fa-check text-danger"></i>
+					<strong class="text-danger">Deletar</strong>
+				</button>
+			</div>
 		</div>
 
 		<!-- File Display -->
