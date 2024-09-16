@@ -201,6 +201,12 @@ function rename_file(file_input) {
 	});
 }
 
+/**
+ * Gets the file from the server and displays it.
+ *
+ * @param {string} file_name - The file name to get.
+ * @returns {void}
+ */
 function get_file(file_name) {
 	// Get the URL for the request
 	const path = "path=" + current_path + "/" + file_name;
