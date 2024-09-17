@@ -1,12 +1,33 @@
-FROM rust:1.81 AS builder
-WORKDIR /usr/src/webfs
-COPY . .
-RUN cargo install --path .
+ARG RUST_VERSION="1.81"
 
-FROM debian:bookworm
-# alpine:3.20.3
+FROM rust:${RUST_VERSION}-slim-bookworm AS builder
+WORKDIR /app
+COPY . .
+RUN \
+    --mount=type=cache,target=/app/target \
+    --mount=type=cache,target=/usr/local/cargo/registry \
+    cargo build --release && \
+    cp ./target/release/webfs /
+
+FROM debian:bookworm-slim AS final
 RUN apt-get update && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/local/cargo/bin/webfs /usr/local/bin/webfs
-ENV PORT=3000
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home /webfs \
+    --shell /sbin/nologin \
+    --no-create-home \
+    --uid 10001 \
+    webfsuser
+
+COPY --from=builder /webfs /usr/local/bin
+COPY --from=builder /app/assets /opt/webfs/assets
+
+RUN chown webfsuser /usr/local/bin/webfs
+RUN chown -R webfsuser /opt/webfs
+
+USER webfsuser
+ENV PORT="3000/tcp"
+WORKDIR /opt/webfs
+ENTRYPOINT ["webfs"]
 EXPOSE ${PORT}
-CMD ["webfs"]
