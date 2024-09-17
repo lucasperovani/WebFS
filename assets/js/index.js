@@ -557,7 +557,10 @@ function hide_options_menu() {
  *
  * @returns {void}
  */
-function delete_files() {
+function delete_files(event) {
+	// Stop event
+	event.preventDefault();
+
 	// Hide the delete warning
 	$(DELETE_FILE_MODAL_ID).hide();
 
