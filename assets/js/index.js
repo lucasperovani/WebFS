@@ -707,7 +707,7 @@ function add_folder(event) {
 
 	// Add the folder to the page
 	const folder =  $("<div>")
-		.addClass("col-md-3")
+		.addClass("col-6 col-md-3 col-lg-2")
 		.append(card);
 
 	$(FILE_LIST_ID)
