@@ -18,8 +18,13 @@ curl -fsSL https://get.docker.com | sudo sh
 ```
 2. Run it with the following command:
 ```sh
-docker run \
-  
+sudo docker run \
+    -p 3000:3000 \
+    --name webfs-jqv \
+    -e DATA_DIR=/JQV \
+    -e PORT=3000 \
+    -v /mnt/data0/JQV:/JQV \
+    lucasperovani/webfs
 ```
 #### Explanation:
 - PORT: The port to access the HTTP server
