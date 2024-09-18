@@ -19,7 +19,7 @@ const FILE_DISPLAY_CLOSE_ID = "#close_file";
 const FILE_NAME_DISPLAY_ID = "#file_name";
 const DOWNLOAD_FILE_ID = "#download_file";
 
-const PREV_FILE_ID = "#prev_file";
+const PREV_FILE_ID = "#previous_file";
 const NEXT_FILE_ID = "#next_file";
 
 const TEXT_FILE_DISPLAY_ID = "#text_file_display";
