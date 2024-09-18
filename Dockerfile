@@ -9,7 +9,12 @@ RUN \
     cargo build --release && \
     cp ./target/release/webfs /
 
+
 FROM alpine:3.20.3 AS final
+
+COPY --from=builder /webfs /usr/local/bin
+COPY --from=builder /app/assets /opt/webfs/assets
+
 RUN adduser \
     --disabled-password \
     --gecos "" \
@@ -17,12 +22,8 @@ RUN adduser \
     --shell /sbin/nologin \
     --no-create-home \
     --uid 10001 \
-    webfsuser
-
-COPY --from=builder /webfs /usr/local/bin
-COPY --from=builder /app/assets /opt/webfs/assets
-
-RUN chown webfsuser /usr/local/bin/webfs && \
+    webfsuser && \
+    chown webfsuser /usr/local/bin/webfs && \
     chown -R webfsuser /opt/webfs && \
     apk upgrade --no-cache && \
     apk add --no-cache libgcc libc6-compat
