@@ -57,10 +57,11 @@ Please, go to our Postman API documentation to check which endpoints to use:
 ### Frontend Usage
 
 ## 📝️ To Do
-- [ ] Split rust code in different files
+- [x] Split rust code in different files
+- [ ] Delete moves the file to a delete directory and a cron deletes when over 30 days
 - [ ] Add tests
 - [ ] Add github CI to test before pull requests
-- [ ] Add github CI to export docker images on merges
+- [x] Add github CI to export docker images on merges
 - [ ] Improve upload and download files
 - [ ] Implement disk information and usage routes
 - [ ] Only add assets and frontend routes with env var
