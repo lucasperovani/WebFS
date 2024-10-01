@@ -1,5 +1,5 @@
 # 🌐️ WebFS
-Filesystem operations exposed over a HTTP server
+### Filesystem operations exposed over a HTTP server
 
 ## 💡️ Idea
 The idea behind WebFS is to expose common filesystem operations to be accessible through HTTP requests. You can have 2 physical disks, in different parts of the world, sharing information and syncing. It can even implement RAID through software in this configuration, with slaves watching master's disks and copying their data to the disk or by simply receiving commands from a controller.
@@ -10,7 +10,7 @@ The current version of WebFS exposes a frontend that uses the API to access the 
 
 You can use it with docker or bare metal.
 
-### Docker
+### 🐋 Docker
 
 1. Install docker:
 ```sh
@@ -19,7 +19,7 @@ curl -fsSL https://get.docker.com | sudo sh
 2. Run it with the following command:
 ```sh
 sudo docker run \
-    -p 3000:3000 \
+    -p ACCESS_PORT:3000 \
     --name webfs-jqv \
     -e DATA_DIR=/JQV \
     -e PORT=3000 \
@@ -27,10 +27,10 @@ sudo docker run \
     lucasperovani/webfs
 ```
 #### Explanation:
-- PORT: The port to access the HTTP server
+- ACCESS_PORT: The port to access the HTTP server
 - DATA_DIR: The data directory to list/upload/download/delete files
 
-### Bare metal
+### 👾 Bare metal
 1. Download the source:
 ```sh
 git clone https://github.com/lucasperovani/WebFS.git && cd WebFS
